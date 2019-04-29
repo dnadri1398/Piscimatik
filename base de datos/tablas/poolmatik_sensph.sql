@@ -23,14 +23,14 @@ DROP TABLE IF EXISTS `sensph`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `sensph` (
-  `idsensph` int(11) NOT NULL AUTO_INCREMENT,
-  `idDepuradora` int(11) DEFAULT NULL,
-  `valor` decimal(4,0) DEFAULT NULL,
-  `fecha` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`idsensph`),
-  KEY `depuradoras-sensph-idDepuradora_idx` (`idDepuradora`),
-  CONSTRAINT `depuradoras-sensph-idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Sensores de ph de la piscina';
+  `id` int(11) NOT NULL,
+  `idSen` int(11) DEFAULT NULL,
+  `valor` int(4) DEFAULT NULL,
+  `fecha` bigint(19) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sensores-sensph-idSens_idx` (`idSen`),
+  CONSTRAINT `sensores-sensph-idSens` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -51,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-03-22 12:48:29
+-- Dump completed on 2019-04-29 14:04:08

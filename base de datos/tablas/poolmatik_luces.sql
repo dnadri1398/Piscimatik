@@ -24,12 +24,12 @@ DROP TABLE IF EXISTS `luces`;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `luces` (
   `idluces` int(11) NOT NULL AUTO_INCREMENT,
-  `idDepuradora` int(11) DEFAULT NULL,
+  `idSen` int(11) DEFAULT NULL,
   `encendido` int(1) DEFAULT NULL,
   `fecha` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`idluces`),
-  KEY `depuradoras-luces-idDepuradora_idx` (`idDepuradora`),
-  CONSTRAINT `depuradoras-luces-idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `sensores-luces-idSen_idx` (`idSen`),
+  CONSTRAINT `sensores-luces-idSen` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='encendido de las luces de la piscina';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -51,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-03-22 12:48:26
+-- Dump completed on 2019-04-29 14:04:06

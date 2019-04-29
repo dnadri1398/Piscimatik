@@ -23,13 +23,13 @@ DROP TABLE IF EXISTS `senstemp`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `senstemp` (
-  `idsenstemp` int(11) NOT NULL AUTO_INCREMENT,
-  `idDepuradora` int(11) DEFAULT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `idSen` int(11) DEFAULT NULL,
   `valor` int(3) DEFAULT NULL,
-  `fecha` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`idsenstemp`),
-  KEY `depuradoras-senstemp-idDepuradora_idx` (`idDepuradora`),
-  CONSTRAINT `depuradoras-senstemp-idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
+  `fecha` bigint(19) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sensores-senstemp-idSen_idx` (`idSen`),
+  CONSTRAINT `sensores-senstemp-idSen` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -51,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-03-22 12:48:25
+-- Dump completed on 2019-04-29 14:04:05

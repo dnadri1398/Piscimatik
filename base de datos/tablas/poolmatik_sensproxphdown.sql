@@ -24,12 +24,12 @@ DROP TABLE IF EXISTS `sensproxphdown`;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `sensproxphdown` (
   `idsensproxphdown` int(11) NOT NULL AUTO_INCREMENT,
-  `idDepuradora` int(11) DEFAULT NULL,
+  `idSen` int(11) DEFAULT NULL,
   `valor` int(3) DEFAULT NULL,
   `fecha` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`idsensproxphdown`),
-  KEY `depuradoras-sensproxphdown-idDepuradora_idx` (`idDepuradora`),
-  CONSTRAINT `depuradoras-sensproxphdown-idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `sensores-sensproxphdown_idx` (`idSen`),
+  CONSTRAINT `sensores-sensproxphdown` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='sensores de proximidad de disminuidor de ph';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -51,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-03-22 12:48:28
+-- Dump completed on 2019-04-29 14:04:07
