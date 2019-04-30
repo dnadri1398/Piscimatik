@@ -6,30 +6,27 @@ package proyecto.Clases;
 //de momento puede ser sustitutivo del resto de clases de sensores
 public class Sensores {
 
-	private int idSensor;
+	private int id;
 	private int idDepuradora;
-	private int valor;
-	private long fecha;
+	private String nombre;
 	
-	public Sensores(int idSensor,int idDepuradora, int valor, long fecha) {
-		this.idSensor = idSensor;
+	public Sensores(int id,int idDepuradora,String nombre) {
+		this.id = id;
 		this.idDepuradora = idDepuradora;
-		this.valor = valor;
-		this.fecha = fecha;
+		this.nombre = nombre;
 	}
-	public Sensores(int idSensor,int idDepuradora, int valor) {
-		this.idSensor = idSensor;
+	public Sensores(int id,int idDepuradora) {
+		this.id = id;
 		this.idDepuradora = idDepuradora;
-		this.valor = valor;
 	}
+	
 	
 	
 	
 	
 	@Override
 	public String toString() {
-		return "SensTemp [idSensor=" + idSensor + ", idDepuradora=" + idDepuradora + ", valor=" + valor + ", fecha="
-				+ fecha + "]";
+		return "[id= " + id + ", idDepuradora= " + idDepuradora + ", nombre= " + nombre + "]";
 	}
 	
 	
@@ -38,7 +35,7 @@ public class Sensores {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + idDepuradora;
-		result = prime * result + idSensor;
+		result = prime * result + id;
 		return result;
 	}
 	@Override
@@ -52,12 +49,12 @@ public class Sensores {
 		Sensores other = (Sensores) obj;
 		if (idDepuradora != other.idDepuradora)
 			return false;
-		if (idSensor != other.idSensor)
+		if (id != other.id)
 			return false;
 		return true;
 	}
-	public Sensores(int idDepuradora) {
-		this.idDepuradora = idDepuradora;
+	public int getId() {
+		return id;
 	}
 	public int getIdDepuradora() {
 		return idDepuradora;
@@ -65,18 +62,13 @@ public class Sensores {
 	public void setIdDepuradora(int idDepuradora) {
 		this.idDepuradora = idDepuradora;
 	}
-	public int getValor() {
-		return valor;
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
 	}
-	public void setValor(int valor) {
-		this.valor = valor;
+	public String getNombre() {
+		return nombre;
 	}
-	public long getFecha() {
-		return fecha;
-	}
-	public void setFecha(long fecha) {
-		this.fecha = fecha;
-	}
+	
 	
 	
 }

@@ -1,4 +1,4 @@
-package dad.us.Poolmatik;
+package proyecto.Clases;
 
 public class Depuradora {
 	
