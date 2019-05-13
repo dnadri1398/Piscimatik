@@ -27,7 +27,7 @@ public class Sensor {
 	
 	//ToString
 	public String toString() {
-		return "[id=" + id + ", idsensph=" + idsen + ", valor=" + valor + ", fecha="
+		return "[id=" + id + ", idsens=" + idsen + ", valor=" + valor + ", fecha="
 				+ fecha + "]";
 	}
 	
