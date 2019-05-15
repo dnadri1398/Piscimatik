@@ -31,15 +31,6 @@ CREATE TABLE `sensores` (
   CONSTRAINT `depuradoras-sensores-idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sensores`
---
-
-LOCK TABLES `sensores` WRITE;
-/*!40000 ALTER TABLE `sensores` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sensores` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -50,4 +41,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-04-29 14:04:08
+-- Dump completed on 2019-05-15 15:34:00

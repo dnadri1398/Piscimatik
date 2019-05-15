@@ -36,16 +36,6 @@ CREATE TABLE `depuradoras` (
   PRIMARY KEY (`idDepuradoras`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `depuradoras`
---
-
-LOCK TABLES `depuradoras` WRITE;
-/*!40000 ALTER TABLE `depuradoras` DISABLE KEYS */;
-INSERT INTO `depuradoras` VALUES (1,'2020-01-19 03:14:07.999999','jesus','tu calle',123456789,'sevilla miarma','tu madre',1,2,3);
-/*!40000 ALTER TABLE `depuradoras` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -56,4 +46,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-04-29 14:04:08
+-- Dump completed on 2019-05-15 15:33:59

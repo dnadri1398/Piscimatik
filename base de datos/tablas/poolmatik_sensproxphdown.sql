@@ -26,21 +26,12 @@ CREATE TABLE `sensproxphdown` (
   `idsensproxphdown` int(11) NOT NULL AUTO_INCREMENT,
   `idSen` int(11) DEFAULT NULL,
   `valor` int(3) DEFAULT NULL,
-  `fecha` datetime(6) DEFAULT NULL,
+  `fecha` bigint(19) DEFAULT NULL,
   PRIMARY KEY (`idsensproxphdown`),
   KEY `sensores-sensproxphdown_idx` (`idSen`),
   CONSTRAINT `sensores-sensproxphdown` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='sensores de proximidad de disminuidor de ph';
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sensproxphdown`
---
-
-LOCK TABLES `sensproxphdown` WRITE;
-/*!40000 ALTER TABLE `sensproxphdown` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sensproxphdown` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -51,4 +42,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-04-29 14:04:07
+-- Dump completed on 2019-05-15 15:33:59

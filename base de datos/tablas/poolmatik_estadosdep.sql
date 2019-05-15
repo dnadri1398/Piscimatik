@@ -26,21 +26,12 @@ CREATE TABLE `estadosdep` (
   `idEstadosDep` int(11) NOT NULL AUTO_INCREMENT,
   `idDepuradora` int(11) DEFAULT NULL,
   `encendido` int(1) DEFAULT NULL,
-  `fecha` datetime(6) DEFAULT NULL,
+  `fecha` bigint(3) DEFAULT NULL,
   PRIMARY KEY (`idEstadosDep`),
   KEY `depuradoras-estadosdep-iddepuradora_idx` (`idDepuradora`),
   CONSTRAINT `depuradoras-estadosdep-iddepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `estadosdep`
---
-
-LOCK TABLES `estadosdep` WRITE;
-/*!40000 ALTER TABLE `estadosdep` DISABLE KEYS */;
-/*!40000 ALTER TABLE `estadosdep` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -51,4 +42,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-04-29 14:04:06
+-- Dump completed on 2019-05-15 15:33:59

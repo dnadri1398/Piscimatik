@@ -16,21 +16,21 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `luces`
+-- Table structure for table `estadocubre`
 --
 
-DROP TABLE IF EXISTS `luces`;
+DROP TABLE IF EXISTS `estadocubre`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
-CREATE TABLE `luces` (
-  `idluces` int(11) NOT NULL AUTO_INCREMENT,
-  `idSen` int(11) DEFAULT NULL,
-  `encendido` int(1) DEFAULT NULL,
-  `fecha` bigint(19) DEFAULT NULL,
-  PRIMARY KEY (`idluces`),
-  KEY `sensores-luces-idSen_idx` (`idSen`),
-  CONSTRAINT `sensores-luces-idSen` FOREIGN KEY (`idSen`) REFERENCES `sensores` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='encendido de las luces de la piscina';
+CREATE TABLE `estadocubre` (
+  `idestadoCubre` int(11) NOT NULL,
+  `idDepuradora` int(11) DEFAULT NULL,
+  `valor` int(1) DEFAULT NULL,
+  `fecha` bigint(3) DEFAULT NULL,
+  PRIMARY KEY (`idestadoCubre`),
+  KEY `idDepuradora_idx` (`idDepuradora`),
+  CONSTRAINT `idDepuradora` FOREIGN KEY (`idDepuradora`) REFERENCES `depuradoras` (`idDepuradoras`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
