@@ -217,7 +217,7 @@ void callback(char* topic, byte* payload, unsigned int length){
       char tempChar[5];
 
       valor = analogRead(lectura);
-      Serial.print("valor leido: ");
+      Serial.print("Valor leido: ");
       Serial.println(valor);
       temperatura = leeTemperatura(valor);
       Serial.println(temperatura);
@@ -227,23 +227,180 @@ void callback(char* topic, byte* payload, unsigned int length){
       //TAREA: poner put de la lectura para subirlo a BBDD
     }
     else if(strcmp(action, "off") == 0){
-      Serial.println("operacion de lectura de Temp no realizada");
+      Serial.println("Operacion de lectura de Temp no realizada");
     }
     else{
       Serial.println("Accion de lectura de Temp desconocida");
     }
+
+
+  } else if(!doc["leerTemperaturaExterior"].isNull()){
+    const char* action = doc["leerTemperaturaExterior"];
+    Serial.printf("Leer temperatura exterior: %s\n", action);
+
+    if(strcmp(action, "on") == 0){
+      int valor = 0;
+      float temperaturaExterior = 0.0;
+      char tempExteriorChar[5];
+
+      valor = analogRead(lectura);
+      Serial.print("Valor leido: ");
+      Serial.println(valor);
+      temperaturaExterior = leeTemperaturaExterior(valor);
+      Serial.println(temperaturaExterior);
+      snprintf(tempExteriorChar, 75, "Temperatura exterior:%f", temperaturaExterior);
+      client.publish(outTopic, tempExteriorChar);
+        //TAREA: poner put de la lectura para subirlo a BBDD
+    }else if(strcmp(action, "off") == 0){
+      Serial.println("Operacion de lectura de Temp no realizada");
+    }
+    else{
+      Serial.println("Accion de lectura de Temp desconocida");
+    }
+
+
+  } else if(!doc["leerLuz"].isNull()){
+    const char* action = doc["leerLuz"];
+    Serial.printf("Leer cantidad de luz exterior: %s\n", action);
+
+    if(strcmp(action, "on") == 0){
+      int valor = 0;
+      float luz = 0.0;
+      char luzChar[5];
+
+      valor = analogRead(lectura);
+      Serial.print("Valor leido: ");
+      Serial.println(valor);
+      luz = leeLuz(valor);
+      Serial.println(luz);
+      snprintf(luzChar, 75, "Luz:%f", luz);
+      client.publish(outTopic, luzChar);
+        //TAREA: poner put de la lectura para subirlo a BBDD
+    }else if(strcmp(action, "off") == 0){
+      Serial.println("Operacion de lectura de Luz no realizada");
+    } else{
+      Serial.println("Accion de lectura de Luz desconocida");
+      }
+
+    } else if(!doc["leerPH"].isNull()){
+      const char* action = doc["leerPH"];
+      Serial.printf("Leer nivel de PH: %s\n", action);
+
+      if(strcmp(action, "on") == 0){
+        int valor = 0;
+        float ph = 0.0;
+        char phChar[5];
+
+        valor = analogRead(lectura);
+        Serial.print("Valor leido: ");
+        Serial.println(valor);
+        ph = leePH(valor);
+        Serial.println(ph);
+        snprintf(phChar, 75, "PH:%f", ph);
+        client.publish(outTopic,phChar);
+        //TAREA: poner put de la lectura para subirlo a BBDD
+      }else if(strcmp(action, "off") == 0){
+        Serial.println("Operacion de lectura de PH no realizada");
+      } else{
+        Serial.println("Accion de lectura de PH desconocida");
+        }
+
+
+      } else if(!doc["leerCloro"].isNull()){
+        const char* action = doc["leerCloro"];
+        Serial.printf("Leer nivel de cloro: %s\n", action);
+
+        if(strcmp(action, "on") == 0){
+          int valor = 0;
+          float cloro = 0.0;
+          char cloroChar[5];
+
+          valor = analogRead(lectura);
+          Serial.print("Valor leido: ");
+          Serial.println(valor);
+          cloro = leeCloro(valor);
+          Serial.println(cloro);
+          snprintf(cloroChar, 75, "Cloro:%f", cloro);
+          client.publish(outTopic, cloroChar);
+          //TAREA: poner put de la lectura para subirlo a BBDD
+        }else if(strcmp(action, "off") == 0){
+          Serial.println("Operacion de lectura de cloro no realizada");
+        } else{
+          Serial.println("Accion de lectura de cloro desconocida");
+          }
+
+      } else if(!doc["leerPHUp"]){
+        const char* action = doc["leerPHUp"];
+        Serial.printf("Leer nivel de PHUp: %s\n", action);
+
+        if(strcmp(action, "on") == 0){
+          int valor = 0;
+          float phUp = 0.0;
+          char phUpChar[5];
+
+          valor = analogRead(lectura);
+          Serial.print("Valor leido: ");
+          Serial.println(valor);
+          phUp = leePHUp(valor);
+          Serial.println(phUp);
+          snprintf(phUpChar, 75, "PHUp:%f", phUp);
+          client.publish(outTopic,phUpChar);
+          //TAREA: poner put de la lectura para subirlo a BBDD
+        }else if(strcmp(action, "off") == 0){
+          Serial.println("Operacion de lectura de PHUp no realizada");
+        } else{
+          Serial.println("Accion de lectura de PHUp desconocida");
+        }
+
+      } else if(!doc["leerPHDown"]){
+      const char* action = doc["leerPHDown"];
+      Serial.printf("Leer nivel de PHDown: %s\n", action);
+
+      if(strcmp(action, "on") == 0){
+        int valor = 0;
+        float phDown = 0.0;
+        char phDownChar[5];
+
+        valor = analogRead(lectura);
+        Serial.print("Valor leido: ");
+        Serial.println(valor);
+        phDown = leePHDown(valor);
+        Serial.println(phDown);
+        snprintf(phDownChar, 75, "PHDown:%f", phDown);
+        client.publish(outTopic,phDownChar);
+        //TAREA: poner put de la lectura para subirlo a BBDD
+      }else if(strcmp(action, "off") == 0){
+        Serial.println("Operacion de lectura de PHDown no realizada");
+      } else{
+        Serial.println("Accion de lectura de PHDown desconocida");
+      }
+
+    }  else if(!doc["leerCloro"]){
+      const char* action = doc["leerCloro"];
+      Serial.printf("Leer nivel de cloroDep: %s\n", action);
+
+      if(strcmp(action, "on") == 0){
+        int valor = 0;
+        float cloroDep = 0.0;
+        char cloroDepChar[5];
+
+        valor = analogRead(lectura);
+        Serial.print("Valor leido: ");
+        Serial.println(valor);
+        cloroDep = leecloroDep(valor);
+        Serial.println(cloroDep);
+        snprintf(cloroDepChar, 75, "CloroDep:%f", cloroDep);
+        client.publish(outTopic,cloroDepChar);
+        //TAREA: poner put de la lectura para subirlo a BBDD
+      }else if(strcmp(action, "off") == 0){
+        Serial.println("Operacion de lectura de cloroDep no realizada");
+      } else{
+        Serial.println("Accion de lectura de cloroDep desconocida");
+      }
+
+    }
+
   }
-    /*TAREA:
-    hacer acciones de lectura de:
-    -temperatura
-    -temperatura exterior
-    -luz
-    -ph
-    -cloro
-    -prox ph aumentador
-    -prox ph reductor
-    -prox cloro
-    */
 
 }
 
