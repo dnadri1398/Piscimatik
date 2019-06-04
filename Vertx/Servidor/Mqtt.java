@@ -1,7 +1,11 @@
 package proyecto.Piscina;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Stream;
 
 import com.google.common.collect.HashMultimap;
@@ -10,6 +14,11 @@ import com.google.common.collect.Multimap;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mqtt.MqttClient;
+import io.vertx.mqtt.MqttClientOptions;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttTopicSubscription;
@@ -18,14 +27,40 @@ import io.vertx.mqtt.messages.MqttPublishMessage;
 public class Mqtt extends AbstractVerticle {
 
 	private static Multimap<String, MqttEndpoint> clientTopics;
+	private static String IP = "192.168.43.217";
+	public String mensajeRecibido = "";
+	public boolean listo = false;
+	Runnable task3;
+	public static String[] listaTopics;
+	public static int tam = 0;
 
 	public void start(Future<Void> startFuture) {
 		clientTopics = HashMultimap.create();
 		// Configuramos el servidor MQTT
 		MqttServer mqttServer = MqttServer.create(vertx);
 		init(mqttServer);
-
 		
+		
+		Runnable task = () -> {
+			vertx.eventBus().consumer("BUS", message->{
+				JsonObject json = new JsonObject(message.body().toString());
+				if(json.containsKey("idDep") && json.containsKey("ONOFF")) {
+					System.out.println("BOOLEANO: " + json.getBoolean("Dep_luces"));
+					cliente(json.getString("idDep"), json.getString("ONOFF"), json.getBoolean("Dep_luces"));
+					mensajeRecibido = (json.getBoolean("Dep_luces"))? "Depuradora": "Luces";
+					
+					if(json.getString("ONOFF").equals("off")) mensajeRecibido += " apagada";					
+					else if(json.getString("ONOFF").equals("on")) mensajeRecibido += " encendida";
+					
+					else mensajeRecibido = "Accion de depuradora desconocida";
+				
+					message.reply(mensajeRecibido);
+			
+				};
+			});
+		};
+		Thread thread1 = new Thread(task);
+		thread1.start();
 		
 	}
 
@@ -108,7 +143,7 @@ public class Mqtt extends AbstractVerticle {
 			// vez (mecanismo más costoso)
 			// - AT_MOST_ONCE: No se asegura que el mensaje llegue al cliente, por lo que no
 			// es necesario ACK por parte de éste
-			List<MqttQoS> grantedQosLevels = new ArrayList<>();
+			List<MqttQoS> grantedQosLevels = new ArrayList<>();			
 			for (MqttTopicSubscription s : subscribe.topicSubscriptions()) {
 				System.out.println("Suscripción al topic " + s.topicName() + " con QoS " + s.qualityOfService());
 				grantedQosLevels.add(s.qualityOfService());
@@ -242,6 +277,104 @@ public class Mqtt extends AbstractVerticle {
 			 */
 			endpoint.publishRelease(message.messageId());
 		}
+	}
+	private static void handleMessageTODOS(MqttPublishMessage message, MqttEndpoint endpoint) {
+		/*
+		 * System.out.println("Mensaje publicado por el cliente " +
+		 * endpoint.clientIdentifier() + " en el topic " + message.topicName());
+		 * System.out.println("    Contenido del mensaje: " +
+		 * message.payload().toString());
+		 */
+
+		/*
+		 * Obtenemos todos los clientes suscritos a ese topic (exceptuando el cliente
+		 * que envía el mensaje) para así poder reenviar el mensaje a cada uno de ellos.
+		 * Es aquí donde nuestro código realiza las funciones de un broken MQTT
+		 */
+		// System.out.println("Origen: " + endpoint.clientIdentifier());
+		
+		
+		List<MqttEndpoint> clientsToRemove = new ArrayList<>();
+		for (MqttEndpoint client : clientTopics.get(message.topicName())) {
+			// System.out.println("Destino: " + client.clientIdentifier());
+			if (!client.clientIdentifier().equals(endpoint.clientIdentifier()))
+				try {
+					client.publish(message.topicName(), message.payload(), message.qosLevel(), message.isDup(),
+							message.isRetain()).publishReleaseHandler(idHandler -> {
+								client.publishComplete(idHandler);
+							});
+				} catch (Exception e) {
+					if (e.getMessage().toLowerCase().equals("connection not accepted yet")) {
+						clientsToRemove.add(client);
+					} else {
+						System.out.println("Error, no se pudo enviar mensaje. " + e.getMessage());
+					}
+				}
+		}
+		
+		if (!clientsToRemove.isEmpty()) {
+			clientsToRemove.forEach(clientToRemove -> handleClientDisconnect(clientToRemove));
+			clientsToRemove.clear();
+		}
+
+		if (message.qosLevel() == MqttQoS.AT_LEAST_ONCE) {
+			String topicName = message.topicName();//------------------------------------------------
+			switch (topicName) {
+			/*
+			 * Se podría hacer algo con el mensaje como, por ejemplo, almacenar un registro
+			 * en la base de datos
+			 */
+			}
+			// Envía el ACK al cliente de que el mensaje ha sido publicado
+			endpoint.publishAcknowledge(message.messageId());
+		} else if (message.qosLevel() == MqttQoS.EXACTLY_ONCE) {
+			/*
+			 * Envía el ACK al cliente de que el mensaje ha sido publicado y cierra el canal
+			 * para este mensaje. Así se evita que los mensajes se publiquen por duplicado
+			 * (QoS)
+			 */
+			endpoint.publishRelease(message.messageId());
+		}
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	public void cliente(String idDep, String encendido, boolean Dep_Luces ) {
+		String topicOut = "/depuradoraIn/" + idDep;
+		MqttClient mqttClient = MqttClient.create(vertx, new MqttClientOptions().setAutoKeepAlive(true));
+		mqttClient.connect(1883, IP, s -> {
+
+			mqttClient.subscribe(topicOut, MqttQoS.AT_LEAST_ONCE.value(), handler -> {
+				if (handler.succeeded()) {
+					
+					System.out.println("Cliente " + mqttClient.clientId() + " suscrito correctamente al canal " + topicOut);
+
+					mqttClient.publishHandler(new Handler<MqttPublishMessage>() {
+						@Override
+						public void handle(MqttPublishMessage arg0) {
+							
+							//mensajeRecibido = arg0.payload().toString();							
+							System.out.println(mensajeRecibido);
+							System.out.println("-----" + mqttClient.clientId());
+							//listo = true;
+							}
+					});
+				}
+			});
+			JsonObject json = new JsonObject();
+			json.put(Dep_Luces? "encendidoDep":"encendidoLuces", encendido);
+			mqttClient.publish(topicOut,
+					Buffer.buffer(json.encode()),
+					MqttQoS.AT_LEAST_ONCE, false, false);
+			
+				
+		});
 	}
 
 }

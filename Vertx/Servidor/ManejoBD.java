@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.asyncsql.AsyncSQLClient;
 import io.vertx.ext.asyncsql.MySQLClient;
@@ -19,11 +20,14 @@ import proyecto.Clases.SensClima;
 import proyecto.Clases.Sensor;
 import proyecto.Clases.luces_estado;
 
+
 public class ManejoBD extends AbstractVerticle{
 
 	private AsyncSQLClient mySQLClient;
 	
 	public void start(Future<Void> startFuture) {
+		
+		
 		
 		JsonObject config = new JsonObject()
 				.put("host", "localhost")
@@ -63,8 +67,9 @@ public class ManejoBD extends AbstractVerticle{
 		router.get("/:idDep/sensores/:sensor").handler(this::handleSensors);
 		router.get("/:idDep/luces").handler(this::handleLuces);
 		router.get("/:idDep/estados").handler(this::handleDepEncendido);
-		
-		
+		router.get("/:idDep/dep/:ONOFF").handler(this::handleEnciendeDepuradora);
+		router.get("/:idDep/luces/:ONOFF").handler(this::handleEnciendeLuces);
+		router.get("/:idDep/verterProductos/:permisoEcharProductos").handler(this::handlePermisoEcharProductos);
 		
 		
 		
@@ -361,8 +366,61 @@ public class ManejoBD extends AbstractVerticle{
 				routingConext.response().setStatusCode(400).end();
 			}
 		});
+		
 	}
-	
+	private void handleEnciendeDepuradora(RoutingContext routing) {
+		System.out.println(routing.pathParam("idDep")+ "  " + routing.pathParam("ONOFF"));
+		EventBus eventBus = vertx.eventBus();
+		String topic = "BUS";
+		JsonObject json = new JsonObject();
+		json.put("idDep", routing.pathParam("idDep"))
+		.put("ONOFF", routing.pathParam("ONOFF"))
+		.put("Dep_luces", true);
+		
+		eventBus.send(topic, json, response->{
+			if(response.succeeded()) {
+				System.out.println(response.result().body().toString());
+			}else {
+				System.out.println(response.cause().getMessage());
+			}
+			routing.response().end(response.result().body().toString());
+		});
+	}
+	private void handleEnciendeLuces(RoutingContext routing) {
+		System.out.println(routing.pathParam("idDep")+ "  " + routing.pathParam("ONOFF"));
+		EventBus eventBus = vertx.eventBus();
+		String topic = "BUS";
+		JsonObject json = new JsonObject();
+		json.put("idDep", routing.pathParam("idDep"))
+		.put("ONOFF", routing.pathParam("ONOFF"))
+		.put("Dep_luces", false);
+		
+		eventBus.send(topic, json, response->{
+			if(response.succeeded()) {
+				System.out.println(response.result().body().toString());
+			}else {
+				System.out.println(response.cause().getMessage());
+			}
+			routing.response().end(response.result().body().toString());
+		});
+	}
+	private void handlePermisoEcharProductos(RoutingContext routing) {
+		System.out.println(routing.pathParam("idDep")+ "  " + routing.pathParam("permisoEcharProductos"));
+		EventBus eventBus = vertx.eventBus();
+		String topic = "BUS";
+		JsonObject json = new JsonObject();
+		json.put("idDep", routing.pathParam("idDep"))
+		.put("permisoEcharProductos", routing.pathParam("permisoEcharProductos"));
+		
+		eventBus.send(topic, json, response->{
+			if(response.succeeded()) {
+				System.out.println(response.result().body().toString());
+			}else {
+				System.out.println(response.cause().getMessage());
+			}
+			routing.response().end(response.result().body().toString());
+		});
+	}
 	private Long obtenerFecha() {
 		return System.currentTimeMillis();
 	}
