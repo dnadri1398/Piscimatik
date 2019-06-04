@@ -4,13 +4,14 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Ticker.h>
+#include <Servo.h>
 
 //PARAMETROS A MODIFICAR
 
-const char* ssid = ;
-const char* pass =;
-const char* broker =;
-const char* http_server = ;
+const char* ssid = "AdrianWIFI";
+const char* pass = "adri10398";
+const char* broker = "192.168.43.23";
+const char* http_server = "192.168.43.23";
 const char* http_server_port = "8081";
 #define DEBUG true
 
@@ -41,20 +42,25 @@ int caudalPHUp = 1; //como ejemplo usamos 1 litro por segundo
 float capacidadPiscina = 10*4*1.5;
 float cantidadAumentador = capacidadPiscina * 0.02;// son 0.02 por cada m3 para
 //aumentar 1 decima de PH
+Servo servo;
 
 
 //pines
 #define lectura  A0
 #define luces D4
 #define depuradora 2
-#define sensorEcho D5
+#define sensorEcho D6
+#define sensorTrigger D5
 #define latchPin D1  // Pin conectado al Pin 12 del 74HC595 (Latch)
 #define dataPin D2  // Pin conectado al Pin 14 del 74HC595 (Data)
 #define clockPin D3
+#define servoPin D7
 
 //IDs dentro de la base de datos de los sensores de éste espPiscina
 #define idTemperatura 2
 #define idph 1
+#define idphup 3
+#define idphdown 4
 
 
 const byte numeros[9] = {
@@ -84,6 +90,14 @@ float leeTemperatura(int valorCrudo){
 float calcularDistancia()
 {
 	float sonido = 34300.0;
+
+  digitalWrite(sensorTrigger, LOW);
+  delayMicroseconds(2);
+  // Ponemos el pin Trigger a estado alto y esperamos 10 ms
+  digitalWrite(sensorTrigger, HIGH);
+  delayMicroseconds(10);
+  // Comenzamos poniendo el pin Trigger en estado bajo
+  digitalWrite(sensorTrigger, LOW);
 	// La función pulseIn obtiene el tiempo que tarda en cambiar entre estados, en este caso a HIGH
 	unsigned long tiempo = pulseIn(sensorEcho, HIGH);
 	// Obtenemos la distancia en cm, hay que convertir el tiempo en segudos ya que está en microsegundos
@@ -102,10 +116,9 @@ float calcularPH(){
 	return phValue;
 }
 
-int leeLuz(){
+int leeLuz(int valorLuz){
 	int valorEncendido = 200;
 	int encendido;
-	int valorLuz = analogRead(lectura);
 	if(valorLuz < valorEncendido){
 		encendido = 1;
 	}
@@ -281,6 +294,72 @@ void PutPH(int ph){
 	http.end();
 }
 
+void PutPHUp(int phUp){
+	//  /sensores/:nombre/agregar
+	HTTPClient http;
+	String url = "http://";
+	url += http_server;
+	url += ":";
+	url += http_server_port;
+	url += "/sensores/sensproxphup/agregar";
+	String message = "Enviando peticion PUT al servidor REST. ";
+	message += url;
+	Serial.println(message);
+	http.begin(url);
+
+	const size_t bufferSize = JSON_OBJECT_SIZE(1) + 370;
+	DynamicJsonDocument root(bufferSize);
+	root["idSen"] = idphup;//id del sensor dentro de la BD
+	root["valor"] = phUp;//valor a enviar
+	String json_string;
+	serializeJson(root, json_string);
+
+	int httpCode = http.PUT(json_string);
+
+	if (httpCode > 0)
+	{
+
+		String payload = http.getString();
+		Serial.println("payload put: " + payload);
+	}
+
+	Serial.printf("\nRespuesta servidor REST PUT %d\n", httpCode);
+	http.end();
+}
+
+void PutPHDown(int phDown){
+	//  /sensores/:nombre/agregar
+	HTTPClient http;
+	String url = "http://";
+	url += http_server;
+	url += ":";
+	url += http_server_port;
+	url += "/sensores/sensproxphdown/agregar";
+	String message = "Enviando peticion PUT al servidor REST. ";
+	message += url;
+	Serial.println(message);
+	http.begin(url);
+
+	const size_t bufferSize = JSON_OBJECT_SIZE(1) + 370;
+	DynamicJsonDocument root(bufferSize);
+	root["idSen"] = idphdown;//id del sensor dentro de la BD
+	root["valor"] = phDown;//valor a enviar
+	String json_string;
+	serializeJson(root, json_string);
+
+	int httpCode = http.PUT(json_string);
+
+	if (httpCode > 0)
+	{
+
+		String payload = http.getString();
+		Serial.println("payload put: " + payload);
+	}
+
+	Serial.printf("\nRespuesta servidor REST PUT %d\n", httpCode);
+	http.end();
+}
+
 
 void callback(char* topic, byte* payload, unsigned int length){
 	Serial.print("Mensaje recibido por canal: ");
@@ -383,41 +462,17 @@ void callback(char* topic, byte* payload, unsigned int length){
 			valor = analogRead(lectura);
 			Serial.print("Valor leido: ");
 			Serial.println(valor);
-			//luz = leeLuz(valor);
-			//Serial.println(luz);
+			luz = leeLuz(valor);
+			Serial.println(luz);
 			snprintf(luzChar, 75, "Luz:%d", valor);
 			client.publish(outTopic, luzChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
+      PutLucesOnOff(luz);
 			}else if(strcmp(action, "off") == 0){
 			client.publish(outTopic,"Operacion de lectura de Luz no realizada");
 			} else{
 			client.publish(outTopic,"Accion de lectura de Luz desconocida");
 		}
-	}//--------------
-	else if(!doc["leerTemperaturaExterior"].isNull()){
-		const char* action = doc["leerTemperaturaExterior"];
-		Serial.printf("Leer temperatura exterior: %s\n", action);
-
-		if(strcmp(action, "on") == 0){
-			int valor = 0;
-			float temperaturaExterior = 0.0;
-			char tempExteriorChar[5];
-
-			valor = analogRead(lectura);
-			Serial.print("Valor leido: ");
-			Serial.println(valor);
-			temperaturaExterior = leeTemperatura(valor);
-			Serial.println(temperaturaExterior);
-			snprintf(tempExteriorChar, 75, "Temperatura exterior:%f", temperaturaExterior);
-			client.publish(outTopic, tempExteriorChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
-			}else if(strcmp(action, "off") == 0){
-			client.publish(outTopic,"Operacion de lectura de Temp no realizada");
-		}
-		else{
-			client.publish(outTopic,"Accion de lectura de Temp desconocida");
-		}
-	}//--------------
+	}
 	else if(!doc["leerPH"].isNull()){
 		const char* action = doc["leerPH"];
 		Serial.printf("Leer nivel de PH: %s\n", action);
@@ -433,40 +488,16 @@ void callback(char* topic, byte* payload, unsigned int length){
 
 			Serial.print("Valor leido: ");
 			Serial.println(ph);
-			//ph = leePH(valor);
+			ph = calcularPH();
 			snprintf(phChar, 75, "PH:%f", ph);
 			client.publish(outTopic,phChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
+      PutPH(ph);
 			}else if(strcmp(action, "off") == 0){
 			client.publish(outTopic,"Operacion de lectura de PH no realizada");
 			} else{
 			client.publish(outTopic,"Accion de lectura de PH desconocida");
 		}
-	} //--------------
-	else if(!doc["leerCloro"].isNull()){
-		const char* action = doc["leerCloro"];
-		Serial.printf("Leer nivel de cloro: %s\n", action);
-
-		if(strcmp(action, "on") == 0){
-			int valor = 0;
-			float cloro = 0.0;
-			char cloroChar[5];
-
-			valor = analogRead(lectura);
-			Serial.print("Valor leido: ");
-			Serial.println(valor);
-			//cloro = leeCloro(valor);
-			Serial.println(cloro);
-			snprintf(cloroChar, 75, "Cloro:%f", cloro);
-			client.publish(outTopic, cloroChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
-			}else if(strcmp(action, "off") == 0){
-			client.publish(outTopic,"Operacion de lectura de cloro no realizada");
-			} else{
-			client.publish(outTopic,"Accion de lectura de cloro desconocida");
-		}
-
-	} //--------------
+	}
 	else if(!doc["leerPHUpDep"].isNull()){
 		const char* action = doc["leerPHUpDep"];
 		Serial.printf("Leer nivel de PHUp: %s\n", action);
@@ -481,18 +512,18 @@ void callback(char* topic, byte* payload, unsigned int length){
 			phUp = calcularDistancia();
 
 			Serial.print("Valor leido: ");
-			//phUp = leePHUp(valor);
+			phUp = calcularDistancia();
 			Serial.println(phUp);
 			snprintf(phUpChar, 75, "PHUp: %f", phUp);
 			client.publish(outTopic,phUpChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
+			PutPHUp(phUp);
 			}else if(strcmp(action, "off") == 0){
 			client.publish(outTopic,"Operacion de lectura de PHUp no realizada");
 			} else{
 			client.publish(outTopic,"Accion de lectura de PHUp desconocida");
 		}
 
-	} //--------------
+	} /* Estos casos no sirven para la demostracion
 	else if(!doc["leerPHDownDep"].isNull()){
 		const char* action = doc["leerPHDownDep"];
 		Serial.printf("Leer nivel de PHDown: %s\n", action);
@@ -541,7 +572,7 @@ void callback(char* topic, byte* payload, unsigned int length){
 		}
 
 	}
-	//------------------------
+	*/
 	else if(!doc["permisoEcharProductos"].isNull()){
 		const char* action = doc["permisoEcharProductos"];
 		Serial.printf("permiso para verter productos quimicos: %s\n", action);
@@ -564,19 +595,38 @@ void callback(char* topic, byte* payload, unsigned int length){
 
 		if(strcmp(action, "on") == 0){
 			Serial.printf("SE HA ACTIVADO");
-			//horarioEcharProductos = true;
-			//client.publish(outTopic,"activado");
-			}else if(strcmp(action, "off") == 0){
-			//horarioEcharPRoductos = false;
+			horarioEcharProductos = true;
+			client.publish(outTopic,"activado");
+		}else if(strcmp(action, "off") == 0){
+			horarioEcharProductos = false;
 			Serial.printf("SE HA DESACTIVADO");
-
-			//client.publish(outTopic,"desactivado");
-			} else{
-			//client.publish(outTopic,"Accion desconocida");
+      client.publish(outTopic,"desactivado");
+		} else{
+			client.publish(outTopic,"Accion desconocida");
 		}
 
 	}
 
+}
+
+void controlServo(int accion){
+  int posicion;
+  if(accion == 1){//Se abre el servo
+    servo.write(180);
+    Serial.printf("Equilibrando PH...");
+    while(posicion != 180){
+      posicion = servo.read();
+    }
+  } else if(accion == 0){//Se cierra el servo
+    servo.write(0);
+    Serial.printf("PH equilibrdo.");
+    while(posicion != 0){
+      posicion = servo.read();
+    }
+  } else{
+    servo.write(0);
+    Serial.print("No se ha podido realizar la accion.");
+  }
 }
 
 void funcionEcharProductos(){
@@ -586,12 +636,12 @@ void funcionEcharProductos(){
 		tiempoActual = millis();
 		if(servoAbiertoPH){
 			digitalWrite(depuradora, LOW);//enciende depuradora
-			//TAREA: abrir servo
+      controlServo(1);//abriendo servo
 			tiempoAnterior = millis();
 
 		}
 		if(tiempoActual - tiempoAnterior >= tiempoVertido){
-			//TAREA: cerrar Servo
+      controlServo(0);//cerrando Servo
 			//se indica que la depuradora está operando tras verter productos
 			depTrasVertido = true;
 			echarPHUp = false;
@@ -671,7 +721,9 @@ void setup() {
 	pinMode(latchPin, OUTPUT);
 	pinMode(clockPin, OUTPUT);
 	pinMode(dataPin, OUTPUT);
+  pinMode(sensorTrigger, OUTPUT);
 	pinMode(sensorEcho, INPUT);
+  servo.attach(servoPin); //PinServo
 	Serial.begin(115200);
 	setupWifi();
 	client.setServer(broker, 1883);
@@ -687,6 +739,7 @@ void loop() {
 		funcionEcharProductos();
 		}else{
 		//TAREA: cerrar servo, puede ocurrir que se elimine el permiso mientras está abierto
+    controlServo(0);
 	}
 	client.loop();
 
