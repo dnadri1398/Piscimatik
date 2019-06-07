@@ -1,6 +1,7 @@
-package proyecto.Piscina;
+ppackage proyecto.Piscina;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Timer;
@@ -24,8 +25,8 @@ import io.vertx.mqtt.messages.MqttPublishMessage;
 public class ClienteMqtt extends AbstractVerticle{
 	
 	private static Multimap<String, MqttEndpoint> clientTopics;
-	//private static String IP = "192.168.43.217";
-	private static String IP = "192.168.1.128";
+	private static String IP = "192.168.43.217";
+	//private static String IP = "192.168.1.128";
 	private static String topicOut = "broker";
 
 	
@@ -64,18 +65,31 @@ public class ClienteMqtt extends AbstractVerticle{
 
 				@Override
 				public void run() {
-				
+					Date horaActual = new Date(System.currentTimeMillis());
+					Calendar activar = Calendar.getInstance();
+					activar.setTime(horaActual);
+		
+					
+					System.out.println(horaActual);
 					//enviamos al broker si activamos o no la hora de vertido de productos
 					if (mqttClient.isConnected()) {
+						
+						if(activar.get(Calendar.HOUR_OF_DAY) == 1) {
 						mqttClient.publish(topicOut,
 								Buffer.buffer(new JsonObject().put("horarioEcharProductos", "on")
 										.encode()),
 								MqttQoS.AT_LEAST_ONCE, false, false);
+						}else if(activar.get(Calendar.HOUR_OF_DAY) == 3)
+							mqttClient.publish(topicOut,
+									Buffer.buffer(new JsonObject().put("horarioEcharProductos", "off")
+											.encode()),
+									MqttQoS.AT_LEAST_ONCE, false, false);
 					}
 					}
-			}, 1000, 3000);
+			}, 1000, 3000000);
 		});
 		
 	}
 	
 }
+

@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -7,14 +8,13 @@
 #include <Servo.h>
 
 //PARAMETROS A MODIFICAR
-
-const char* ssid = "AdrianWIFI";
-const char* pass = "adri10398";
-const char* broker = "192.168.43.23";
-const char* http_server = "192.168.43.23";
+const int movil = 1;
+const char* ssid = "";
+const char* pass = "";
+const char* broker = "";
+const char* http_server = "";
 const char* http_server_port = "8081";
-#define DEBUG true
-
+#define DEBUG false
 
 const char* outTopic = "/depuradoraOut/001";
 const char* comun = "broker";
@@ -23,7 +23,6 @@ int idDepuradora = 1;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-
 
 long currentTime, lastTime;
 long tiempoActual, tiempoAnterior, tiempoVertido;
@@ -35,7 +34,7 @@ int encendidoDepuradora = LOW;
 int luzExterior = 800;//carga este valor inicial para que "sea de dia"
 boolean echarPHUp = false;// el sistema indica que hay que echar producto
 boolean permisoEcharProductos = true;//el usuario permite o no verter productos
-boolean horarioEcharProductos = false;//determina si es hora de echar productos
+boolean horarioEcharProductos = true;//determina si es hora de echar productos
 boolean servoAbiertoPH = false; //indica si se está vertiendo aumentador ph
 boolean depTrasVertido= false;
 int caudalPHUp = 1; //como ejemplo usamos 1 litro por segundo
@@ -43,14 +42,15 @@ float capacidadPiscina = 10*4*1.5;
 float cantidadAumentador = capacidadPiscina * 0.02;// son 0.02 por cada m3 para
 //aumentar 1 decima de PH
 Servo servo;
+boolean r = false;
 
 
 //pines
 #define lectura  A0
 #define luces D4
-#define depuradora 2
+#define depuradora D8
 #define sensorEcho D6
-#define sensorTrigger D5
+#define sensorTrigger D0
 #define latchPin D1  // Pin conectado al Pin 12 del 74HC595 (Latch)
 #define dataPin D2  // Pin conectado al Pin 14 del 74HC595 (Data)
 #define clockPin D3
@@ -74,20 +74,21 @@ const byte numeros[9] = {
 	0b00000010,
 	0b00000001
 };
-//TAREA: leer los sensores cada hora mediante el uso de Ticker
 float leeTemperatura(int valorCrudo){
-	float R1 = 10000;
+	/*float R1 = 10000;
 	float logR2, R2, T, Tc;
 	float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
-	R2 = R1 * (906.0 / (float)valorCrudo - 1.0);// se ha calibrado a 906 tendria que ser 1023.0 ha causa del diodo, resta precision
+	R2 = R1 * (1024 / (float)valorCrudo - 1.0);// se ha calibrado a 906 tendria que ser 1023.0 ha causa del diodo, resta precision
 	logR2 = log(R2);
 	T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
 	Tc = T - 273.15;
+*/
+	float Tc = valorCrudo *70 / 1024;
 
-	return Tc;
+	return Tc ;
 }
-float calcularDistancia()
+int calcularDistancia()
 {
 	float sonido = 34300.0;
 
@@ -103,28 +104,30 @@ float calcularDistancia()
 	// Obtenemos la distancia en cm, hay que convertir el tiempo en segudos ya que está en microsegundos
 	// por eso se multiplica por 0.000001
 	float distancia = tiempo * 0.000001 * sonido / 2.0;
+	int distanciaCM = distancia;
 	delay(500);
 
-	return distancia;
+	return distanciaCM;
 }
 
 float calcularPH(){
 	float valorPH=analogRead(lectura);
+	Serial.println(valorPH);
 
-	float pHVol=(float)valorPH*5.0/1024/6;
-	float phValue = -5.70 * pHVol + 21.34 + 7;
-	return phValue;
+	float pHVol=(float)valorPH*30.0/1024;
+	float phValue = -5.70 * pHVol + 10; //21.34 + 7;
+	return pHVol;
 }
 
 int leeLuz(int valorLuz){
-	int valorEncendido = 200;
+	int valorEncendido = 600;
 	int encendido;
 	if(valorLuz < valorEncendido){
-		encendido = 1;
+		encendido = 0;
 	}
 	else if(valorLuz >= valorEncendido){
-		encendido = 0;
-	}else encendido = 0;
+		encendido = 1;
+	}else encendido = 1;
 	return encendido;
 }
 
@@ -230,7 +233,6 @@ void PutLucesOnOff(int OnOff){
 }
 
 void PutTemperatura(int temperatura){
-	//  /sensores/:nombre/agregar
 	HTTPClient http;
 	String url = "http://";
 	url += http_server;
@@ -380,18 +382,18 @@ void callback(char* topic, byte* payload, unsigned int length){
 		int OnOff = 0;
 
 		if(strcmp(action, "on") == 0){
-			digitalWrite(depuradora, LOW);
+			digitalWrite(depuradora, HIGH);
 			OnOff = 1;
 			Serial.println("Depuradora encendida");
 			client.publish(inTopic, "Depuradora encendida");
-			//PutDepuradoraOnOff(OnOff);
+			PutDepuradoraOnOff(OnOff);
 		}
 		else if(strcmp(action, "off") == 0){
-			digitalWrite(depuradora, HIGH);
+			digitalWrite(depuradora, LOW);
 			OnOff = 0;
 			Serial.println("Depuradora apagada");
 			client.publish(inTopic, "Depuradora apagada");
-			//PutDepuradoraOnOff(OnOff);
+			PutDepuradoraOnOff(OnOff);
 		}
 		else{
 			Serial.println("Accion de depuradora desconocida");
@@ -523,56 +525,7 @@ void callback(char* topic, byte* payload, unsigned int length){
 			client.publish(outTopic,"Accion de lectura de PHUp desconocida");
 		}
 
-	} /* Estos casos no sirven para la demostracion
-	else if(!doc["leerPHDownDep"].isNull()){
-		const char* action = doc["leerPHDownDep"];
-		Serial.printf("Leer nivel de PHDown: %s\n", action);
-
-		if(strcmp(action, "on") == 0){
-			int valor = 0;
-			float phDown = 0.0;
-			char phDownChar[5];
-
-			valor = analogRead(lectura);
-			Serial.print("Valor leido: ");
-			Serial.println(valor);
-			//phDown = leePHDown(valor);
-			Serial.println(phDown);
-			snprintf(phDownChar, 75, "PHDown:%f", phDown);
-			client.publish(outTopic,phDownChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
-			}else if(strcmp(action, "off") == 0){
-			client.publish(outTopic,"Operacion de lectura de PHDown no realizada");
-			} else{
-			client.publish(outTopic,"Accion de lectura de PHDown desconocida");
-		}
-
-	}//--------------
-	else if(!doc["leerCloroDep"].isNull()){
-		const char* action = doc["leerCloroDep"];
-		Serial.printf("Leer nivel de cloroDep: %s\n", action);
-
-		if(strcmp(action, "on") == 0){
-			int valor = 0;
-			float cloroDep = 0.0;
-			char cloroDepChar[5];
-
-			valor = analogRead(lectura);
-			Serial.print("Valor leido: ");
-			Serial.println(valor);
-			//cloroDep = leecloroDep(valor);
-			Serial.println(cloroDep);
-			snprintf(cloroDepChar, 75, "CloroDep:%f", cloroDep);
-			client.publish(outTopic,cloroDepChar);
-			//TAREA: poner put de la lectura para subirlo a BBDD
-			}else if(strcmp(action, "off") == 0){
-			client.publish(outTopic,"Operacion de lectura de cloroDep no realizada");
-			} else{
-			client.publish(outTopic,"Accion de lectura de cloroDep desconocida");
-		}
-
 	}
-	*/
 	else if(!doc["permisoEcharProductos"].isNull()){
 		const char* action = doc["permisoEcharProductos"];
 		Serial.printf("permiso para verter productos quimicos: %s\n", action);
@@ -613,13 +566,11 @@ void controlServo(int accion){
   int posicion;
   if(accion == 1){//Se abre el servo
     servo.write(180);
-    Serial.printf("Equilibrando PH...");
     while(posicion != 180){
       posicion = servo.read();
     }
   } else if(accion == 0){//Se cierra el servo
     servo.write(0);
-    Serial.printf("PH equilibrdo.");
     while(posicion != 0){
       posicion = servo.read();
     }
@@ -634,14 +585,17 @@ void funcionEcharProductos(){
 
 	if(echarPHUp && permisoEcharProductos && horarioEcharProductos){
 		tiempoActual = millis();
-		if(servoAbiertoPH){
-			digitalWrite(depuradora, LOW);//enciende depuradora
+		if(r == false){
+			Serial.println("ha entrado en la funcion");
+			digitalWrite(depuradora, HIGH);//enciende depuradora
       controlServo(1);//abriendo servo
 			tiempoAnterior = millis();
+      r = true;
 
 		}
 		if(tiempoActual - tiempoAnterior >= tiempoVertido){
       controlServo(0);//cerrando Servo
+      r = false;
 			//se indica que la depuradora está operando tras verter productos
 			depTrasVertido = true;
 			echarPHUp = false;
@@ -658,59 +612,57 @@ void funcionInterrupcion(){
 }
 
 
-//TAREA: meter los put en cada lectura de sensor
+
+
 void leeSensores(){
+	//TEMPERATURA
 	digitalWrite(latchPin, LOW); //activa la señal al 74hc595
 	shiftOut(dataPin, clockPin, LSBFIRST, numeros[1]);
 	digitalWrite(latchPin, HIGH); //envía al 74hc595  lo guardado en el buffer
-	PutTemperatura(analogRead(lectura));
+	int tempVar = leeTemperatura(analogRead(lectura));
+	PutTemperatura(tempVar);
+	Serial.println(tempVar);
 
 	delay(100);
 
+	//LUZ
 	digitalWrite(latchPin, LOW); //activa la señal al 74hc595
 	shiftOut(dataPin, clockPin, LSBFIRST, numeros[2]);
 	digitalWrite(latchPin, HIGH); //envía al 74hc595  lo guardado en el buffer
 	luzExterior = analogRead(lectura);
+	digitalWrite(luces,leeLuz(luzExterior));
+	Serial.println(leeLuz(luzExterior));
+	Serial.println(luzExterior);
 
 	delay(100);
 
+	//PH
 	digitalWrite(latchPin, LOW);
 	shiftOut(dataPin, clockPin, LSBFIRST, numeros[3]);
 	digitalWrite(latchPin, HIGH);
 	float valorPH = calcularPH();
+	valorPH = 7.31;
+
 	if(valorPH < 7,2){
 		echarPHUp = true;
 		tiempoVertido = (7,5 - valorPH)*10 * cantidadAumentador * caudalPHUp;
 	}
-	//PUT ph
+	contadorPH++;
 
 	delay(100);
 
+	//Distancia PH up
 	digitalWrite(latchPin, LOW);
 	shiftOut(dataPin, clockPin, LSBFIRST, numeros[4]);
 	digitalWrite(latchPin, HIGH);
-	float valorDistancia = calcularDistancia();
-	//PUT ph
-
+	int valorDistancia = calcularDistancia();
+	//PutPHUp(valorDistancia);
+	//Serial.println(valorDistancia);
 
 
 	//PutPH(analogRead(lectura));
 }
 
-
-//ésta funcion solo sirve de prueba para verificar que envía mensajes al canal
-void prueba() {
-	char* topicPrueba = "prueba";
-	currentTime = millis();
-	if(currentTime - lastTime > 2000){
-		count++;
-		snprintf(messages, 75, "Count:%d", count);
-		Serial.print("sending messages: ");
-		Serial.println(messages);
-		client.publish(topicPrueba, messages);
-		lastTime = millis();
-	}
-}
 
 int cont = 0;
 int cont2 = 0;
@@ -728,7 +680,7 @@ void setup() {
 	setupWifi();
 	client.setServer(broker, 1883);
 	client.setCallback(callback);
-	ticker.attach(1000,funcionInterrupcion);
+	ticker.attach(10,funcionInterrupcion);
 }
 
 void loop() {
@@ -736,9 +688,11 @@ void loop() {
 		reconnect();
 	}
 	if(echarPHUp && permisoEcharProductos && horarioEcharProductos){
+		Serial.println("ha entrado en loop");
 		funcionEcharProductos();
 		}else{
-		//TAREA: cerrar servo, puede ocurrir que se elimine el permiso mientras está abierto
+      r = false;
+
     controlServo(0);
 	}
 	client.loop();
@@ -750,7 +704,7 @@ void loop() {
 		if(depTrasVertido){
 			cont = cont +1;
 			if(cont >=3){
-				digitalWrite(depuradora, HIGH);//apagamos depuradora
+				digitalWrite(depuradora, LOW);//apagamos depuradora
 				depTrasVertido = false;
 				cont = 0;
 			}
@@ -765,8 +719,6 @@ void loop() {
 		}
 	}
 
-	if(DEBUG){
-		prueba();
-	}
+
 
 }
